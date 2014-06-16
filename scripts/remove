@@ -1,0 +1,5 @@
+#!/bin/bash
+
+
+sudo rm -rf /var/www/tagspaces
+sudo rm -f /etc/nginx/conf.d/$domain.d/tagspaces.conf

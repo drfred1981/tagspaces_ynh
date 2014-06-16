@@ -1,0 +1,44 @@
+{
+    "name": "Tagspaces",
+    "id": "tagspaces",
+    "description": {
+        "en": "TagSpaces is an open source personal data manager. It helps you organize files with tags on every platform.",
+        "fr": "TagSpaces "
+    },
+    "developer": {
+        "name": "drfred1981",
+        "email": "frederic.duvert@laposte.net",
+        "url": ""
+    },
+    "multi_instance": "true",
+    "arguments": {
+        "install" : [
+            {
+                "name": "domain",
+                "ask": {
+                    "en": "Choose a domain for Tagspaces",
+                    "fr": "Choisissez un domaine pour Tagspaces"
+                },
+                "example": "domain.org"
+            },
+            {
+                "name": "path",
+                "ask": {
+                    "en": "Choose a path for Tagspaces",
+                    "fr": "Choisissez un chemin pour Tagspaces"
+                },
+                "example": "/tagspaces",
+                "default": "/tagspaces"
+            },
+	    {
+                "name": "admin",
+                "ask": {
+                    "en": "Choose the Owncloud administrator (must be an existing YunoHost user)"
+                },
+                "example": "homer"
+            }
+        ]
+    }
+}
+
+
