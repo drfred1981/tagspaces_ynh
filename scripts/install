@@ -30,8 +30,7 @@ sudo cp -a ../sources/* $final_path
 sudo mkdir -p $final_path/logs
 sudo chown -R www-data: $final_path
 
-sudo chown -hR tagspaces:www-data $final_path
-sudo chown tagspaces:www-data /home/yunohost.app/tagspaces
+
 sudo chmod 755 /home/yunohost.app
 sudo find $final_path -type f | xargs sudo chmod 664
 sudo find $final_path -type d | xargs sudo chmod 775
