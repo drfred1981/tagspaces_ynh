@@ -81,7 +81,7 @@ define(function(require, exports, module) {
             i;
 
         var $alternativeNavigator = $("#alternativeNavigator");
-        $alternativeNavigator.empty();
+        $alternativeNavigator.children().remove();
         for(i=0; i < directoryHistory.length; i++) {
             homeIcon = "";
             if(i===0) {
@@ -113,34 +113,48 @@ define(function(require, exports, module) {
             )
             //.append('<li class="divider"></li>')
             .append($("<li>", {} )
-                .append($("<button>", {
-                        "class":    "btn btn-link",
+                .append($("<a>", {
+                        "class":    "btn btn-link pull-left",
                         "path":      directoryHistory[i].path,
                         "title":     $.i18n.t("ns.common:reloadCurrentDirectoryTooltip", {dirName: directoryHistory[i].name}),
                         "data-i18n": "ns.common:reloadCurrentDirectory",
                         "text":      " "+$.i18n.t("ns.common:reloadCurrentDirectory")
                     })
-                    .prepend("<i class='fa fa-refresh fa-lg fa-fw'></i>")
+                    .prepend("<i class='fa fa-refresh fa-fw'></i>")
                     .click( function() {
                         navigateToDirectory($(this).attr("path"));
                     })
                     )
              )
             .append($("<li>", {} )                     
-                .append($("<button>", {
-                        "class":    "btn btn-link",
+                .append($("<a>", {
+                        "class":    "btn btn-link pull-left",
                         "path":      directoryHistory[i].path,
                         "title":     $.i18n.t("ns.common:createSubdirectoryTooltip", {dirName: directoryHistory[i].name}),
                         "data-i18n": "ns.common:createSubdirectory",
                         "text":     " "+$.i18n.t("ns.common:createSubdirectory")
                     })
-                    .prepend("<i class='fa fa-folder fa-lg fa-fw'></i>")
+                    .prepend("<i class='fa fa-folder fa-fw'></i>")
                     .click( function() {
                         showCreateDirectoryDialog($(this).attr("path"));
                     })
                 )
             )
-            .append('<li class="divider"></li>')
+            .append($("<li>", {} )
+                .append($("<a>", {
+                    "class":    "btn btn-link pull-left",
+                    "path":      directoryHistory[i].path,
+                    "title":     $.i18n.t("ns.common:renameDirectoryTooltip"),
+                    "data-i18n": "ns.common:renameDirectory",
+                    "text":     " "+$.i18n.t("ns.common:renameDirectory")
+                })
+                    .prepend("<i class='fa fa-paragraph fa-fw'></i>")
+                    .click( function() {
+                        showRenameDirectoryDialog($(this).attr("path"));
+                    })
+                )
+            )
+            .append('<li class="divider" style="width: 100%"></li>')
             .append($("<li>", {
                 "text": $.i18n.t("ns.common:subfodersOfDirectory", {dirName: directoryHistory[i].name}),
                 "class": 'dropdown-header'
@@ -207,7 +221,7 @@ define(function(require, exports, module) {
         if (sourceObject.offset().left+300 > window.innerWidth) {
             leftPos = -200+sourceObject.width();
         }
-        console.log(leftPos+" "+sourceObject.offset().left+" "+$menu.width()+" "+window.innerWidth);
+        //console.log(leftPos+" "+sourceObject.offset().left+" "+$menu.width()+" "+window.innerWidth);
 
         $menu.css({
             display: "block",
@@ -219,7 +233,8 @@ define(function(require, exports, module) {
     function generateDirPath() {
         console.log("Generating Directory Path...");
         var $locationContent = $("#locationContent");
-        $locationContent.empty().addClass("accordion");
+        $locationContent.children().remove();
+        $locationContent.addClass("accordion");
         for(var i=0; i < directoryHistory.length; i++) {
             $locationContent.append($("<div>", {
                 "class":        "accordion-group disableTextSelection",   
@@ -449,9 +464,23 @@ define(function(require, exports, module) {
         });    
         
         $( "#directoryMenuCreateDirectory" ).click( function() {
-            showCreateDirectoryDialog();
-        });    
-        
+            showCreateDirectoryDialog(dir4ContextMenu);
+        });
+
+        $( "#directoryMenuRenameDirectory" ).click( function() {
+            showRenameDirectoryDialog(dir4ContextMenu);
+        });
+
+        $( "#directoryMenuDeleteDirectory" ).click( function() {
+            TSCORE.showConfirmDialog(
+                $.i18n.t("ns.dialogs:deleteDirectoryTitleConfirm"),
+                $.i18n.t("ns.dialogs:deleteDirectoryContentConfirm", { dirPath: dir4ContextMenu }),
+                function() {
+                    TSCORE.IO.deleteDirectory(dir4ContextMenu);
+                }
+            );
+        });
+
         $( "#directoryMenuOpenDirectory" ).click( function() {
             TSCORE.IO.openDirectory(dir4ContextMenu);
         });
@@ -526,7 +555,7 @@ define(function(require, exports, module) {
                 var $locationPerspective2 = $("#locationPerspective2");
 
                 var selectedPerspectiveId = TSCORE.Config.getLocation(path).perspective;
-                    $locationPerspective2.empty();
+                    $locationPerspective2.children().remove();
                     TSCORE.Config.getActivatedPerspectiveExtensions().forEach( function(value) {
                             if (selectedPerspectiveId === value.id) {
                                 $locationPerspective2.append($("<option>").attr("selected","selected").text(value.id).val(value.id));
@@ -600,25 +629,40 @@ define(function(require, exports, module) {
 
                     $( "#createNewDirectoryButton" ).on("click", function() {
                         // TODO validate folder name
-                        var bValid = true;
-                        //bValid = bValid && checkLength( newDirName, "directory name", 3, 100 );
-                        //bValid = bValid && checkRegexp( newDirName, /^[a-z]([0-9a-z_])+$/i, "Directory name may consist of a-z, 0-9, underscores, begin with a letter." );
-                        if ( bValid ) {
-                            TSCORE.IO.createDirectory($( "#createNewDirectoryButton" ).attr("path")+TSCORE.dirSeparator+$( "#newDirectoryName" ).val());
-                        }
+                        TSCORE.IO.createDirectory($( "#createNewDirectoryButton" ).attr("path")+TSCORE.dirSeparator+$( "#newDirectoryName" ).val());
                     });
-                }
-                // TODO remove use dir4ContextMenu
-                if(dirPath === undefined) {
-                    dirPath = dir4ContextMenu;
                 }
                 $( "#createNewDirectoryButton" ).attr("path", dirPath);
                 $("#newDirectoryName").val("");
                 $('#dialogDirectoryCreate').i18n();
                 $('#dialogDirectoryCreate').modal({backdrop: 'static',show: true});
         });
-    }    
-    
+    }
+
+    function showRenameDirectoryDialog(dirPath) {
+        require([
+            "text!templates/DirectoryRenameDialog.html"
+        ], function(uiTPL) {
+            if($("#dialogDirectoryRename").length < 1) {
+                var uiTemplate = Handlebars.compile( uiTPL );
+                $('body').append(uiTemplate());
+
+                $( "#renameDirectoryButton" ).on("click", function() {
+                    TSCORE.IO.renameDirectory($( "#renameDirectoryButton" ).attr("path"), $( "#directoryNewName" ).val());
+                });
+            }
+            // TODO remove use dir4ContextMenu
+            //if(dirPath === undefined) {
+            //    dirPath = dir4ContextMenu;
+            //}
+            $( "#renameDirectoryButton" ).attr("path", dirPath);
+            var dirName = TSCORE.TagUtils.extractDirectoryName(dirPath);
+            $("#directoryNewName").val(dirName);
+            $('#dialogDirectoryRename').i18n();
+            $('#dialogDirectoryRename').modal({backdrop: 'static',show: true});
+        });
+    }
+
     function deleteLocation(name) {
         console.log("Deleting folder connection..");
         TSCORE.Config.deleteLocation(name);
@@ -636,11 +680,11 @@ define(function(require, exports, module) {
     function closeCurrentLocation() {
         console.log("Closing location..");
         $("#locationName").text($.i18n.t("ns.common:chooseLocation")).attr("title","");
-        $("#locationContent").empty(); 
+        $("#locationContent").children().remove();
         
         // Clear the footer
-        $("#statusBar").empty();
-        $("#alternativeNavigator").empty();
+        $("#statusBar").children().remove();
+        $("#alternativeNavigator").children().remove();
         
         
         TSCORE.disableTopToolbar();
@@ -662,7 +706,7 @@ define(function(require, exports, module) {
         console.log("Creating location menu...");
         
         var $connectionList = $( "#connectionsList" ); 
-        $connectionList.empty();
+        $connectionList.children().remove();
         $connectionList.attr("style","overflow-y: auto; max-height: 500px; width: 238px;");
         $connectionList.append($('<li>', {
                 class: "dropdown-header",

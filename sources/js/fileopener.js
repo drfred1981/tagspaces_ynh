@@ -184,7 +184,8 @@
 
     function cleanViewer() {
         // Cleaning the viewer/editor
-        document.getElementById("viewer").innerHTML = "";
+        //document.getElementById("viewer").innerHTML = "";
+        $( "#viewer" ).find("*").off().unbind().children().remove();
         TSCORE.FileOpener.setFileOpened(false);
         TSCORE.closeFileViewer();
         _isEditMode = false;
@@ -257,8 +258,11 @@
         } else {
             $( "#editDocument" ).show();                
         }
-     
-        $( "#viewer" ).empty();
+
+        var $viewer = $( "#viewer" );
+        $viewer.find("*").off();
+        $viewer.find("*").unbind();
+        $viewer.find("*").remove();
 
         TSCORE.IO.checkAccessFileURLAllowed();
 
@@ -352,7 +356,7 @@
     function editFile(filePath) {
         console.log("Editing file: "+filePath);
 
-        $( "#viewer" ).empty();
+        $( "#viewer" ).children().remove();
 
         var editorExt = getFileEditor(filePath);
         try {
@@ -421,7 +425,9 @@
             }
         });
         generatedTagButtons = TSCORE.generateTagButtons(tagString,_openedFilePath);
-        $( "#fileTags" ).empty().append(generatedTagButtons);
+        var $fileTags = $( "#fileTags" );
+        $fileTags.children().remove();
+        $fileTags.append(generatedTagButtons);
     
         $( "#tagsContainer" ).droppable({
             greedy: "true",
@@ -430,17 +436,14 @@
             drop: function( event, ui ) {
                 console.log("Tagging file: "+TSCORE.selectedTag+" to "+_openedFilePath);
                 TSCORE.TagUtils.addTag([_openedFilePath], [TSCORE.selectedTag]);
-
                 //$(ui.helper).remove();
             }
         });
 
         // Init Tag Context Menus
-        $('#fileTags').on("contextmenu click", ".tagButton", function () {
+        $fileTags.on("contextmenu click", ".tagButton", function () {
             TSCORE.hideAllDropDownMenus();
-
             TSCORE.openTagMenu(this, $(this).attr("tag"), $(this).attr("filepath"));
-
             TSCORE.showContextMenu("#tagMenu", $(this));
             return false;
         });
@@ -451,7 +454,7 @@
         var suggTags = TSCORE.TagUtils.suggestTags(filePath);
 
         var tsMenu = $( "#tagSuggestionsMenu" );
-        tsMenu.empty();
+        tsMenu.children().remove();
         tsMenu.attr("style","overflow-y: auto; max-height: 500px;");
         tsMenu.append($('<li>', {
                 class: "dropdown-header",
@@ -520,7 +523,7 @@
                 $("#fileSizeProperty").val(_openedFileProperties.size);
                 $("#fileLMDTProperty").val(new Date(_openedFileProperties.lmdt));
                 var $fileTagsProperty = $("#fileTagsProperty");
-                $fileTagsProperty.empty();
+                $fileTagsProperty.children().remove();
                 $fileTagsProperty.append(generatedTagButtons);
                 $fileTagsProperty.find(".caret").hide(); // hiding the dropdown trigger
                 $('#dialogFileProperties').i18n().modal({backdrop: 'static',show: true});

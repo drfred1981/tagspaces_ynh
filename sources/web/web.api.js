@@ -28,7 +28,8 @@ define(function(require, exports, module) {
     function listDirectory(dirPath) {
         console.log("Listing directory: "+dirPath);
 
-        dirPath = dirPath + "/";
+        dirPath = encodeURI(dirPath + "/");
+
 
         davClient.propfind(
             dirPath,
@@ -45,7 +46,7 @@ define(function(require, exports, module) {
                 for (var entry in dirList) {
                     var path = dirList[entry].href;
                     if(dirPath !== path) {
-                        isDir = false,
+                        isDir = false;
                         filesize = undefined;
                         lmdt = undefined;
                         //console.log(dirList[entry]._namespaces["DAV:"]);
@@ -121,7 +122,20 @@ define(function(require, exports, module) {
             },
             newFilePath,
             davClient.FAIL_ON_OVERWRITE
-            //,customHeaders
+        );
+    };
+
+    var renameDirectory = function(dirPath, newDirName) {
+        var newDirPath = TSCORE.TagUtils.extractParentDirectoryPath(dirPath) + TSCORE.dirSeparator + newDirName;
+        console.log("Renaming directory: "+dirPath+" to "+newDirPath);
+        davClient.move(
+            dirPath,
+            function( status, data, headers ) {
+                console.log("Rename Directory Status/Content/Headers:  "+status+" / "+data+" / "+headers);
+                TSPOSTIO.renameDirectory(dirPath, newDirPath);
+            },
+            newDirPath,
+            davClient.FAIL_ON_OVERWRITE
         );
     };
     	
@@ -162,6 +176,17 @@ define(function(require, exports, module) {
             }
         );
 	};
+
+    var deleteDirectory = function(path) {
+        console.log("Deleting directory: "+path);
+        davClient.remove(
+            path,
+            function( status, data, headers ) {
+                console.log("Directory/File Deletion Status/Content/Headers:  "+status+" / "+data+" / "+headers);
+                TSPOSTIO.deleteDirectory(path);
+            }
+        );
+    };
 	
     var checkAccessFileURLAllowed = function() {
         console.log("checkAccessFileURLAllowed function not relevant for webdav..");
@@ -207,10 +232,12 @@ define(function(require, exports, module) {
     
 	exports.createDirectory 			= createDirectory; 
 	exports.renameFile 					= renameFile;
+    exports.renameDirectory             = renameDirectory;
 	exports.loadTextFile 				= loadTextFile;
 	exports.saveTextFile 				= saveTextFile;
 	exports.listDirectory 				= listDirectory;
 	exports.deleteElement 				= deleteElement;
+    exports.deleteDirectory             = deleteDirectory;
     exports.createDirectoryIndex 		= createDirectoryIndex;
     exports.createDirectoryTree 		= createDirectoryTree;
 	exports.selectDirectory 			= selectDirectory;

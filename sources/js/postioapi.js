@@ -21,7 +21,6 @@ define(function(require, exports, module) {
     };    
     
     exports.createDirectory = function(dirPath) {
-        //TODO evtl navigate to parent dir
         TSCORE.navigateToDirectory(dirPath);
         TSCORE.hideLoadingAnimation();        
     };
@@ -51,7 +50,12 @@ define(function(require, exports, module) {
         TSCORE.hideLoadingAnimation();    
         TSCORE.PerspectiveManager.clearSelectedFiles();
     };
-        
+
+    exports.renameDirectory = function(dirOldPath, dirNewPath) {
+        TSCORE.navigateToDirectory(dirNewPath);
+        TSCORE.hideLoadingAnimation();
+    };
+
     exports.loadTextFile = function(content) {
         TSCORE.FileOpener.updateEditorContent(content);
         TSCORE.hideLoadingAnimation();
@@ -89,10 +93,22 @@ define(function(require, exports, module) {
     exports.deleteElement = function(filePath) {
         TSCORE.removeFileModel(TSCORE.fileList, filePath);
         TSCORE.PerspectiveManager.removeFileUI(filePath);
-        TSCORE.closeFileViewer();
+        if(filePath === TSCORE.FileOpener.getOpenedFilePath()) {
+            TSCORE.closeFileViewer();
+        }
         TSCORE.hideLoadingAnimation();        
     };
-    
+
+    exports.deleteDirectory = function(dirPath) {
+        TSCORE.navigateToDirectory(TSCORE.TagUtils.extractParentDirectoryPath(dirPath));
+        TSCORE.hideLoadingAnimation();
+    };
+
+    exports.deleteDirectoryFailed = function(dirPath) {
+        TSCORE.showAlertDialog($.i18n.t("ns.dialogs:errorDeletingDirectoryAlert"));
+        TSCORE.hideLoadingAnimation();
+    };
+
     exports.checkNewVersion = function(data) {
         TSCORE.updateNewVersionData(data);    
     };  
