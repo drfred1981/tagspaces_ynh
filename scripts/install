@@ -11,13 +11,6 @@ if [[ ! $? -eq 0 ]]; then
     exit 1
 fi
 
-# Generate random DES key & password
-deskey=$(dd if=/dev/urandom bs=1 count=200 2> /dev/null | tr -c -d 'A-Za-z0-9' | sed -n 's/\(.\{24\}\).*/\1/p')
-db_pwd=$(dd if=/dev/urandom bs=1 count=200 2> /dev/null | tr -c -d 'A-Za-z0-9' | sed -n 's/\(.\{24\}\).*/\1/p')
-
-
-# Create tagspaces user
-sudo useradd -d /var/www/tagspaces tagspaces
 
 # Copy files to the right place
 final_path=/var/www/tagspaces
@@ -28,13 +21,8 @@ sudo cp -a ../sources/* $final_path
 
 # Set permissions to tagspaces directory
 sudo mkdir -p $final_path/logs
-sudo chown -R www-data: $final_path
 
-
-sudo chmod 755 /home/yunohost.app
-sudo find $final_path -type f | xargs sudo chmod 664
-sudo find $final_path -type d | xargs sudo chmod 775
-
+sudo chown -hR www-data:www-data $final_path
 
 # Modify Nginx configuration file and copy it to Nginx conf directory
 sed -i "s@PATHTOCHANGE@$path@g" ../conf/nginx.conf
