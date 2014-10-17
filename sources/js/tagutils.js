@@ -16,6 +16,20 @@
         return filePath.substring(filePath.lastIndexOf(TSCORE.dirSeparator) + 1, filePath.length);
     }
 
+    function cleanTrailingDirSeparator(dirPath) {
+        if(dirPath !== undefined) {
+            if(dirPath.lastIndexOf("\\") === dirPath.length-1) {
+                return dirPath.substring(0, dirPath.length-1)
+            } else if(dirPath.lastIndexOf("/") === dirPath.length-1) {
+                return dirPath.substring(0,dirPath.length-1)
+            } else {
+                return dirPath;
+            }
+        } else {
+            console.error("Directory Path "+dirPath+" undefined");
+        }
+    }
+
     function extractFileNameWithoutExt(filePath) {
         var fileName = extractFileName(filePath);
         var indexOfDot = fileName.lastIndexOf(".");
@@ -141,7 +155,7 @@
         return cYear+"."+cMonth+"."+cDate+time;
     }
     
-    function formatDateTime4Tag(date, includeTime) {
+    function formatDateTime4Tag(date, includeTime, includeMS) {
         if ((date === undefined) || (date === "")) { return ""; }
         var d = new Date(date);
         var cDate = d.getDate();
@@ -164,7 +178,11 @@
         if (includeTime) {
             time = "-"+cHour+""+cMinute+""+cSecond; 
         }
-        return cYear+""+cMonth+""+cDate+time;
+        var milliseconds = "";
+        if (includeMS) {
+            milliseconds = "-"+d.getMilliseconds();
+        }
+        return cYear+""+cMonth+""+cDate+time+milliseconds;
     } 
     
     function convertStringToDate(dateString) {
@@ -491,6 +509,7 @@
     exports.removeTags                          = removeTags;
     exports.addTag                              = addTag;
     exports.cleanFilesFromTags                  = cleanFilesFromTags;
+    exports.cleanTrailingDirSeparator           = cleanTrailingDirSeparator;
     exports.changeTitle                         = changeTitle;
     exports.stringEndsWith                      = stringEndsWith;
 

@@ -12,17 +12,26 @@ define(function(require, exports, module) {
     exports.createDirectoryIndex = function(directoryIndex) {
         console.log("Directory index created");
         TSCORE.PerspectiveManager.updateFileBrowserData(directoryIndex);
-        //TSCORE.hideLoadingAnimation();        
+        TSCORE.hideWaitingDialog();
     };   
     
     exports.createDirectoryTree = function(directoyTree) {
         TSCORE.PerspectiveManager.updateTreeData(directoyTree);
-        //TSCORE.hideLoadingAnimation();         
-    };    
+        TSCORE.hideWaitingDialog();
+    };
     
     exports.createDirectory = function(dirPath) {
         TSCORE.navigateToDirectory(dirPath);
-        TSCORE.hideLoadingAnimation();        
+        TSCORE.hideWaitingDialog();
+    };
+
+    exports.copyFile = function(sourceFilePath, targetFilePath) {
+        var targetDirectory = TSCORE.TagUtils.extractContainingDirectoryPath(targetFilePath);
+        if(targetDirectory === TSCORE.currentPath) {
+            TSCORE.navigateToDirectory(TSCORE.currentPath);
+            TSCORE.PerspectiveManager.clearSelectedFiles();
+        }
+        TSCORE.hideWaitingDialog();
     };
 
     exports.renameFile = function(oldFilePath, newFilePath) {
@@ -40,14 +49,15 @@ define(function(require, exports, module) {
         if(oldFileContainingPath !== newFileConaintingPath) {
             // File was moved
             // TODO consider case - file was moved in subdir shown in the recursive search results
-            TSCORE.removeFileModel(TSCORE.fileList, oldFilePath);
-            TSCORE.PerspectiveManager.removeFileUI(oldFilePath);    
+            //TSCORE.removeFileModel(TSCORE.fileList, oldFilePath);
+            //TSCORE.PerspectiveManager.removeFileUI(oldFilePath);
+            TSCORE.navigateToDirectory(TSCORE.currentPath);
         } else {
-            // File was just renamed
+            // File was renamed
             TSCORE.updateFileModel(TSCORE.fileList, oldFilePath, newFilePath);
             TSCORE.PerspectiveManager.updateFileUI(oldFilePath, newFilePath);            
         } 
-        TSCORE.hideLoadingAnimation();    
+        TSCORE.hideWaitingDialog();
         TSCORE.PerspectiveManager.clearSelectedFiles();
     };
 
@@ -60,16 +70,19 @@ define(function(require, exports, module) {
         TSCORE.FileOpener.updateEditorContent(content);
         TSCORE.hideLoadingAnimation();
     };
-    
+
+    exports.saveBinaryFile = function(filePath) {
+        TSCORE.PerspectiveManager.refreshFileListContainer();
+    };
+
     exports.saveTextFile = function(filePath, isNewFile) {
-        // If the file is new, then refresh the filelist 
+        TSCORE.PerspectiveManager.refreshFileListContainer();
+
         if(isNewFile) {
-            TSCORE.PerspectiveManager.refreshFileListContainer();            
+            // If file is new open it in edit mode
+            TSCORE.FileOpener.openFile(filePath, true);
         }
-        //if(!TSCORE.FileOpener.isFileOpened()) {
-            TSCORE.FileOpener.openFile(filePath);                    
-        //}
-        TSCORE.hideLoadingAnimation();                             
+        TSCORE.FileOpener.setFileChanged(false);
     };
     
     exports.listDirectory = function(anotatedDirList) {
@@ -85,16 +98,24 @@ define(function(require, exports, module) {
         }
     };
 
-    exports.errorOpeningPath = function() {
-        TSCORE.showAlertDialog($.i18n.t("ns.dialogs:errorOpeningLocationAlert"));
-        TSCORE.closeCurrentLocation();
-    };
+    exports.errorOpeningPath = function(dirPath) {
+        // Normalazing the paths
+        var dir1 = TSCORE.TagUtils.cleanTrailingDirSeparator(TSCORE.currentLocationObject.path);
+        var dir2 = TSCORE.TagUtils.cleanTrailingDirSeparator(dirPath);
+        // Close the current location if the its path could not be opened
+        if(dir1 === dir2) {
+            TSCORE.showAlertDialog($.i18n.t("ns.dialogs:errorOpeningLocationAlert"));
+            TSCORE.closeCurrentLocation();
+        } else {
+            TSCORE.showAlertDialog($.i18n.t("ns.dialogs:errorOpeningPathAlert"));
+        }
+     };
     
     exports.deleteElement = function(filePath) {
         TSCORE.removeFileModel(TSCORE.fileList, filePath);
         TSCORE.PerspectiveManager.removeFileUI(filePath);
         if(filePath === TSCORE.FileOpener.getOpenedFilePath()) {
-            TSCORE.closeFileViewer();
+            TSCORE.FileOpener.closeFile(true);
         }
         TSCORE.hideLoadingAnimation();        
     };
@@ -105,6 +126,7 @@ define(function(require, exports, module) {
     };
 
     exports.deleteDirectoryFailed = function(dirPath) {
+        console.log("Deleting of '"+dirPath+"' failed");
         TSCORE.showAlertDialog($.i18n.t("ns.dialogs:errorDeletingDirectoryAlert"));
         TSCORE.hideLoadingAnimation();
     };
@@ -121,7 +143,8 @@ define(function(require, exports, module) {
         var dirName = TSCORE.TagUtils.extractContainingDirectoryName(dirPath);
         $("#connectionName").val(dirName);                
         $("#folderLocation").val(dirPath);
-        $("#folderLocation2").val(dirPath);        
+        $("#folderLocation2").val(dirPath);
+        $("#moveCopyDirectoryPath").val(dirPath);
     };
     
     exports.openDirectory = function(dirPath) {

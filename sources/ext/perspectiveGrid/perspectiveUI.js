@@ -51,7 +51,7 @@ console.log("Loading UI for perspectiveDefault");
                <button class="btn btn-sm tagButton fileTagsTile" tag="{{tag}}" filepath="{{filepath}}" style="{{style}}">{{tag}} <span class="caret"></span></button>\
                {{/each}}\
                </span><span class="fileExtTile">{{fileext}}</span>\
-               <button class="btn btn-link fileTileSelector" filepath="{{filepath}}"><i class="fa fa-square-o"></i></button></p></li>');
+               <button class="btn btn-link fileTileSelector" filepath="{{filepath}}"><i class="fa fa-square-o fa-lg"></i></button></p></li>');
     
     var fileTileTmbTmpl = Handlebars.compile('<li title="{{filepath}}" filepath="{{filepath}}" class="fileTile">\
                <span><img class="thumbImgTile" filepath="{{tmbpath}}" style="max-width: 200px; max-height: 200px;" src=""></span>\
@@ -60,7 +60,7 @@ console.log("Loading UI for perspectiveDefault");
                <button class="btn btn-sm tagButton fileTagsTile" tag="{{tag}}" filepath="{{filepath}}" style="{{style}}">{{tag}} <span class="caret"></span></button>\
                {{/each}}\
                </span><span class="fileExtTile">{{fileext}}</span>\
-               <button class="btn btn-link fileTileSelector" filepath="{{filepath}}"><i class="fa fa-square-o"></i></button></p></li>');
+               <button class="btn btn-link fileTileSelector" filepath="{{filepath}}"><i class="fa fa-square-o fa-lg"></i></button></p></li>');
     
     ExtUI.prototype.createFileTile = function(title, filePath, fileExt, fileTags) {
         //TODO minimize platform specific calls     
@@ -125,16 +125,16 @@ console.log("Loading UI for perspectiveDefault");
         // Adding context menu entries according to the taggroups
         for (var i=0; i < self.supportedGroupings.length; i++) {        
             suggMenu.append($('<li>').append($('<a>', { 
-                    title: "Group by "+self.supportedGroupings[i].title, 
-                    text: " "+self.supportedGroupings[i].title,
+                    text: " Group by "+self.supportedGroupings[i].title,
                     key: self.supportedGroupings[i].key,
                     group: self.supportedGroupings[i].title
                 })
-                .prepend( "<i class='fa fa-group' />" )            
+                .prepend( "<i class='fa fa-group fa-fw' />" )
                 .click(function() {
                     $("#"+self.extensionID+"GroupingButton")
-                        .text(" Grouped by "+$(this).attr("group")+" ")
-                        .prepend( "<i class='fa fa-group' />" )
+                        .attr("title"," Grouped by "+$(this).attr("group")+" ")
+                        .text(" "+$(this).attr("group")+" ")
+                        .prepend( "<i class='fa fa-group fa-fw' />" )
                         .append( "<span class='caret'></span>" );                                
                     self.switchGrouping($(this).attr("key"));
                 })                
@@ -169,11 +169,26 @@ console.log("Loading UI for perspectiveDefault");
                 checkIcon.toggleClass("fa-check-square");                                     
                 checkIcon.toggleClass("fa-square-o");                        
             });
-            
-        $("#"+this.extensionID+"CreateFileButton")
-            .click(function() {
-                TSCORE.showFileCreateDialog();
-            });
+
+        $("#"+this.extensionID+"CreateFileButton").on("click", function () {
+            TSCORE.showFileCreateDialog();
+        });
+
+        $("#"+this.extensionID+"CreateDirectoryButton").on("click", function () {
+            TSCORE.showCreateDirectoryDialog(TSCORE.currentPath)
+        });
+
+        $("#"+this.extensionID+"CreateHTMLFileButton").on("click", function () {
+            TSCORE.createHTMLFile();
+        });
+
+        $("#"+this.extensionID+"CreateMDFileButton").on("click", function () {
+            TSCORE.createMDFile();
+        });
+
+        $("#"+this.extensionID+"CreateTXTFileButton").on("click", function () {
+            TSCORE.createTXTFile();
+        });
                     
         $("#"+this.extensionID+"IncludeSubDirsButton")         
             .click(function() {

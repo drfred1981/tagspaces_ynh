@@ -19,13 +19,17 @@ define(function(require, exports, module) {
     var tsSearch = require("tssearch");
     
     var currentPath;
-    var currentView;
+    var currentLocationObject;
+    var currentPerspectiveID;
 
     // Current selected files
     var selectedFiles = [];
 
     // Current directory list of files
     var fileList = [];
+
+    // List of the sub directories of the current directory
+    var subDirsList = [];
 
     // Last clicked button for removing a tag
     var selectedTag = "";
@@ -89,9 +93,12 @@ define(function(require, exports, module) {
                 tsCoreUI.showWelcomeDialog();
             }
 
-            // Handle command line argument in node-webkit
             if(isNode) {
+                // Handle command line argument in node-webkit
                 tsIOApi.handleStartParameters();
+
+                // Handle minimizing to the tray in node-webkit
+                //tsIOApi.handleTray();
             }
 
             console.log("Layout initialized");
@@ -114,11 +121,9 @@ define(function(require, exports, module) {
             ns: { namespaces: ['ns.common','ns.dialogs','ns.perspectiveList']},
             lng: language,
             debug: true,
-            fallbackLng: "en"
+            fallbackLng: "en_US"
         }, function() {
             $('[data-i18n]').i18n();
-            //$("#locationName").text($.i18n.t("ns.common:chooseLocation"));
-            //$("#currentPerspectitveName").text($.i18n.t("ns.common:perspectivesDropDown"));
             if(isNode) {
                 tsIOApi.initMainMenu();
             }
@@ -147,10 +152,9 @@ define(function(require, exports, module) {
             tsCoreUI.showLocationsPanel();
         });
 
-        //Mousetrap.bind("mod+t", function() {
-            // TODO check if min 1 file is selected
-            //tsTagsUI.showAddTagsDialog();
-        //});
+        Mousetrap.bind(tsSettings.getAddRemoveTagsKeyBinding(), function() {
+            tsTagsUI.showAddTagsDialog();
+        });
 
         // TODO add swipeleft for closing left panel
         /* $(".col1").hammer().on("swipeleft", function(event) {
@@ -289,10 +293,7 @@ define(function(require, exports, module) {
     var col1Layout;
     var col2Layout;
 
-    var row1Height = 40; // px
-    var row3Height = 45; // px  
-    
-    var isFullWidth = false; 
+    var isFullWidth = false;
     var shouldOpenCol1 = true;
     var shouldOpenCol3 = false;    
     var col1DefaultWidth = 250;
@@ -436,8 +437,8 @@ define(function(require, exports, module) {
                 }
             },
             name:                       'outerLayout', // for debugging & auto-adding buttons (see below)
-            fxName:                     "none", // none, slide
-        //,   fxSpeed:                  "normal",
+            //fxName:                     "slide", // none, slide
+            //fxSpeed:                    "normal",
             autoResize:                 true,	// try to maintain pane-percentages
             autoReopen:                 true,	// auto-open panes that were previously auto-closed due to 'no room'
             minSize:                    0,
@@ -470,11 +471,13 @@ define(function(require, exports, module) {
             center__paneSelector:       '.row2',
             south__paneSelector:        '.row3',
         //  north__size:                row1Height,	// percentage size expresses as a string
-            south__size:                row3Height,
+            south__size:                50,
             north__spacing_open:        0,
             south__spacing_open:        0,
             autoResize:                 false,	// try to maintain pane-percentages
             closable:                   false,
+            //fxName:                     "slide", // none, slide
+            //fxSpeed:                    "slow", // normal, fast
             togglerLength_open:         0,	// hide toggler-buttons
             spacing_closed:             0,	// hide resizer/slider bar when closed
         //	autoReopen:                 true,	// auto-open panes that were previously auto-closed due to 'no room'
@@ -494,7 +497,7 @@ define(function(require, exports, module) {
             center__paneSelector:       '.row2',
             south__paneSelector:        '.row3',
         //  north__size:                row1Height,	// percentage size expresses as a string
-            south__size:                row3Height,
+            south__size:                45,
             north__spacing_open:        0,
             south__spacing_open:        0,
             autoResize:                 true,	// try to maintain pane-percentages
@@ -547,11 +550,13 @@ define(function(require, exports, module) {
     exports.PerspectiveManager = tsPersManager;
     exports.TagUtils = tsTagUtils;
     exports.FileOpener = tsFileOpener;
-    exports.Search = tsSearch;	
+    exports.Search = tsSearch;
 
     // Public API definition
     exports.dirSeparator                = (isWin && !isWeb)?"\\":"/";
+    exports.locationDesktop;
     exports.initApp                     = initApp;
+    exports.reLayout                    = reLayout;
     exports.updateLogger                = updateLogger;
     exports.showLoadingAnimation        = showLoadingAnimation;
     exports.hideLoadingAnimation        = hideLoadingAnimation;
@@ -586,18 +591,25 @@ define(function(require, exports, module) {
     exports.showTagsPanel        		= tsCoreUI.showTagsPanel;
     exports.showContextMenu        		= tsCoreUI.showContextMenu;
     exports.showDirectoryBrowserDialog  = tsCoreUI.showDirectoryBrowserDialog;
+    exports.createHTMLFile              = tsCoreUI.createHTMLFile;
+    exports.createMDFile                = tsCoreUI.createMDFile;
+    exports.createTXTFile               = tsCoreUI.createTXTFile;
 
     // Proxying functions from tsTagsUI
     exports.generateTagButtons 			= tsTagsUI.generateTagButtons;
     exports.generateTagStyle            = tsTagsUI.generateTagStyle;
     exports.openTagMenu 				= tsTagsUI.openTagMenu;
+    exports.showWaitingDialog           = tsCoreUI.showWaitingDialog;
+    exports.hideWaitingDialog           = tsCoreUI.hideWaitingDialog;
+    exports.showMoveCopyFilesDialog     = tsCoreUI.showMoveCopyFilesDialog;
     exports.showAddTagsDialog			= tsTagsUI.showAddTagsDialog;
     exports.showTagEditInTreeDialog     = tsTagsUI.showTagEditInTreeDialog;
     exports.showDialogTagCreate         = tsTagsUI.showDialogTagCreate;
     exports.showDialogEditTagGroup      = tsTagsUI.showDialogEditTagGroup;
     exports.showDialogTagGroupCreate    = tsTagsUI.showDialogTagGroupCreate;	
-    exports.calculatedTags              = tsTagsUI.calculatedTags;  
-    exports.generateTagGroups           = tsTagsUI.generateTagGroups;  
+    exports.calculatedTags              = tsTagsUI.calculatedTags;
+    exports.locationTags                = tsTagsUI.locationTags;
+    exports.generateTagGroups           = tsTagsUI.generateTagGroups;
 
     // Proxying functions from directoriesUI
     exports.openLocation                = tsDirectoriesUI.openLocation;
@@ -609,9 +621,11 @@ define(function(require, exports, module) {
 
     // Public variables definition
     exports.currentPath                 = currentPath;
-    exports.currentView                 = currentView;
+    exports.currentLocationObject       = currentLocationObject;
+    exports.currentPerspectiveID        = currentPerspectiveID;
     exports.selectedFiles               = selectedFiles;
     exports.fileList                    = fileList;
+    exports.subDirsList                 = subDirsList;
     exports.selectedTag                 = selectedTag;
     exports.selectedTagData             = selectedTagData;
     exports.startTime                   = startTime;

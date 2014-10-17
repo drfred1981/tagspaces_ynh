@@ -22,20 +22,23 @@
                             <select class='form-control' id='languagesList'></select>
                             <p class="help-block" data-i18n="ns.dialogs:switchLanguageHelp">Switching language will fully take effect after restarting the application</p>
                         </div>
-                        <div class='form-group col-sm-12'>
-                            <label class="checkbox">
-                                <input type='checkbox' id='showHiddenFilesCheckbox'/>
+                        <div class='checkbox col-sm-12'>
+                            <label>
+                                <input type='checkbox' id='showHiddenFilesCheckbox' />
                                 <span data-i18n="ns.dialogs:showUnixHiddenFiles">Show files/directories with a dot(.) in front of the name (e.g. Unix, Linux, OS X hidden files)</span>
                             </label>
                         </div>
-                        <div class='form-group col-sm-12'>
-                            <label class="checkbox">
+                        <div class='checkbox col-sm-12'>
+                            <label>
                                 <input type='checkbox' id='checkforUpdatesCheckbox'/>
                                 <span data-i18n="ns.dialogs:checkForNewVersion">Check for new version on startup</span>
                             </label>
                         </div>
                         <div class='form-group col-sm-12'>
                             <button class="btn btn-danger" id="defaultSettingsButton" aria-hidden="true" data-i18n="ns.dialogs:restoreDefaulSettingButton">Restore Initial Settings</button>
+                        </div>
+                        <div class='form-group col-sm-12'>
+                            <button class="btn btn-warning" id="exportTagGroupsButton" aria-hidden="true" data-i18n="ns.dialogs:exportTagGroupsButton">Export Tag Groups as JSON</button>
                         </div>
                     </div>
 
@@ -58,7 +61,7 @@
                         <form class="form-horizontal" role="form">
                             <div class='form-group col-sm-12'>
                                 <p class="help-block" data-i18n="ns.dialogs:keyBindingInstructions" style="font-weight: bold">Instructions:</p>
-                                <p class="help-block"><span data-i18n="ns.dialogs:keyBindingInstructions1">For modifier keys you can use</span>&nbsp;<code>shift</code>, <code>ctrl</code>, <code>alt</code>, <code>option</code>, <code>meta</code> &amp; <code>command</code>.</p>
+                                <p class="help-block"><span data-i18n="ns.dialogs:keyBindingInstructions1">For modifier keys you can use</span>&nbsp;<code>shift</code>, <code>ctrl</code>, <code>alt</code>, <code>option</code>, <code>meta</code>, <code>command</code> &amp; <code>mod</code>.</p>
                                 <p class="help-block"><span data-i18n="ns.dialogs:keyBindingInstructions2">Other special keys are</span>&nbsp;<code>backspace</code>, <code>tab</code>, <code>enter</code>, <code>return</code>, <code>capslock</code>, <code>esc</code>, <code>escape</code>, <code>space</code>, <code>pageup</code>, <code>pagedown</code>, <code>end</code>, <code>home</code>, <code>left</code>, <code>up</code>, <code>right</code>, <code>down</code>, <code>ins</code> &amp; <code>del</code>.</p>
                                 <p class="help-block"><span data-i18n="ns.dialogs:keyBindingInstructions3">Any other key you should be able to reference by name like</span>&nbsp;<code>a</code>, <code>/</code>, <code>$</code>, <code>*</code>, <code>=</code>.</p>
                                 <p class="help-block"><span data-i18n="ns.dialogs:keyBindingInstructions4">You can assign many keys to a single operation, simpy by separating them by</span>&nbsp;<code>,</code>.</p>
@@ -99,8 +102,20 @@
                                     <input type='text' class='form-control' id='prevDocumentKeyBinding' placeholder='left'/>
                                 </div>
                             </div>
+                            <div class='form-group'>
+                                <label class="col-sm-4 control-label" data-i18n="ns.dialogs:editDocumentKeyBinding">Edit Document</label>
+                                <div class="col-sm-7">
+                                    <input type='text' class='form-control' id='editDocumentKeyBinding' placeholder='ctrl+e | command+e'/>
+                                </div>
+                            </div>
+                            <div class='form-group'>
+                                <label class="col-sm-4 control-label" data-i18n="ns.dialogs:addRemoveTagsKeyBinding">Add / Remove Tags</label>
+                                <div class="col-sm-7">
+                                    <input type='text' class='form-control' id='addRemoveTagsKeyBinding' placeholder='ctrl+t | command+t'/>
+                                </div>
+                            </div>
                             <!--div class='form-group'>
-                                <label class="col-sm-4 control-label" data-i18n="ns.dialogs:"></label>
+                                <label class="col-sm-4 control-label" data-i18n="ns.dialogs:KeyBinding"></label>
                                 <div class="col-sm-7">
                                     <input type='text' class='form-control' id='KeyBinding' placeholder=''/>
                                 </div>
@@ -114,8 +129,15 @@
                             <label for='extensionsPathInput' data-i18n="ns.dialogs:extensionsFolder">Extensions folder (default value is "ext")</label>
                             <input type='text' class='form-control' id='extensionsPathInput' data-i18n="[placeholder]ns.dialogs:extensionsFolderPlaceholder"/>
                         </div>
-                        <div class='form-group col-sm-12'>
-                            <label class="checkbox">
+                        <div class='checkbox col-sm-12'>
+                            <label>
+                                <input type='checkbox' id='loadLocationMetaData'/>
+                                <span>Loads location meta data (currently only tag groups)</span>
+                            </label><!-- data-i18n="ns.dialogs:loadLocationMetaData" data-i18n="ns.dialogs:loadLocationMetaDataHelp" -->
+                            <p class="help-block">Location metadata file "tsm.json" should be placed in the ".ts "subfolder of the current location. The file format should be the same as the exported tag groups file from the tab 'general'.</p>
+                        </div>
+                        <div class='checkbox col-sm-12'>
+                            <label>
                                 <input type='checkbox' id='calculateTagsCheckbox'/>
                                 <span data-i18n="ns.dialogs:calculateTag">Calculate tags from the current search results</span>
                             </label>
@@ -133,7 +155,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times fa-lg"></i></button>
+                <button class="btn cancelButton" data-dismiss="modal" aria-hidden="true"><i class="fa fa-times fa-lg"></i></button>
                 <button class="btn btn-primary" id="saveSettingsCloseButton"><i class="fa fa-check fa-lg"></i></button>
             </div>
         </div>

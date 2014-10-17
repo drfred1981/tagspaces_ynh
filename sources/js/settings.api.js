@@ -274,7 +274,13 @@
                     }
                 );
             }
-            
+
+            if(oldBuildNumber <= 201407251310) {
+                addFileType({ "type": "json",    "viewer": "editorJSON", "editor": "editorJSON" });
+                addToSettingsArray(exports.Settings.ootbViewers,"editorJSON");
+                addToSettingsArray(exports.Settings.ootbEditors,"editorJSON");
+            }
+
             saveSettings();         
         }
 
@@ -425,10 +431,7 @@
      };
 
      var getCloseViewerKeyBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
-             saveSettings();
-         }
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.closeViewer === undefined) {
              exports.Settings.keyBindings.closeViewer = exports.DefaultSettings.keyBindings.closeViewer;
              saveSettings();
@@ -440,11 +443,21 @@
          exports.Settings.keyBindings.closeViewer = value;
      };
 
-     var getSaveDocumentKeyBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
+     var getEditDocumentKeyBinding = function () {
+         updateKeyBindingsSetting();
+         if (exports.Settings.keyBindings.editDocument === undefined) {
+             exports.Settings.keyBindings.editDocument = exports.DefaultSettings.keyBindings.editDocument;
              saveSettings();
          }
+         return exports.Settings.keyBindings.editDocument;
+     };
+
+     var setEditDocumentKeyBinding = function (value) {
+         exports.Settings.keyBindings.editDocument = value;
+     };
+
+     var getSaveDocumentKeyBinding = function () {
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.saveDocument === undefined) {
              exports.Settings.keyBindings.saveDocument = exports.DefaultSettings.keyBindings.saveDocument;
              saveSettings();
@@ -474,10 +487,7 @@
      };
 
      var getToggleFullScreenKeyBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
-             saveSettings();
-         }
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.toggleFullScreen === undefined) {
              exports.Settings.keyBindings.toggleFullScreen = exports.DefaultSettings.keyBindings.toggleFullScreen;
              saveSettings();
@@ -489,11 +499,21 @@
          exports.Settings.keyBindings.toggleFullScreen = value;
      };
 
-     var getReloadDocumentKeyBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
+     var getAddRemoveTagsKeyBinding = function () {
+         updateKeyBindingsSetting();
+         if (exports.Settings.keyBindings.addRemoveTags === undefined) {
+             exports.Settings.keyBindings.addRemoveTags = exports.DefaultSettings.keyBindings.addRemoveTags;
              saveSettings();
          }
+         return exports.Settings.keyBindings.addRemoveTags;
+     };
+
+     var setAddRemoveTagsKeyBinding = function (value) {
+         exports.Settings.keyBindings.addRemoveTags = value;
+     };
+
+     var getReloadDocumentKeyBinding = function () {
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.reloadDocument === undefined) {
              exports.Settings.keyBindings.reloadDocument = exports.DefaultSettings.keyBindings.reloadDocument;
              saveSettings();
@@ -506,10 +526,7 @@
      };
 
      var getDeleteDocumentKeyBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
-             saveSettings();
-         }
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.deleteDocument === undefined) {
              exports.Settings.keyBindings.deleteDocument = exports.DefaultSettings.keyBindings.deleteDocument;
              saveSettings();
@@ -522,10 +539,7 @@
      };
 
      var getPropertiesDocumentKeyBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
-             saveSettings();
-         }
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.propertiesDocument === undefined) {
              exports.Settings.keyBindings.propertiesDocument = exports.DefaultSettings.keyBindings.propertiesDocument;
              saveSettings();
@@ -538,10 +552,7 @@
      };
 
      var getNextDocumentKeyBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
-             saveSettings();
-         }
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.nextDocument === undefined) {
              exports.Settings.keyBindings.nextDocument = exports.DefaultSettings.keyBindings.nextDocument;
              saveSettings();
@@ -554,10 +565,7 @@
      };
 
      var getPrevDocumentKeyBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
-             saveSettings();
-         }
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.prevDocument === undefined) {
              exports.Settings.keyBindings.prevDocument = exports.DefaultSettings.keyBindings.prevDocument;
              saveSettings();
@@ -570,10 +578,7 @@
      };
 
      var getShowTagLibraryKeyBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
-             saveSettings();
-         }
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.showTagLibrary === undefined) {
              exports.Settings.keyBindings.showTagLibrary = exports.DefaultSettings.keyBindings.showTagLibrary;
              saveSettings();
@@ -586,10 +591,7 @@
      };
 
      var getShowFolderNavigatorBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
-             saveSettings();
-         }
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.showFolderNavigator === undefined) {
              exports.Settings.keyBindings.showFolderNavigator = exports.DefaultSettings.keyBindings.showFolderNavigator;
              saveSettings();
@@ -602,10 +604,7 @@
      };
 
      var getOpenDevToolsScreenKeyBinding = function () {
-         if (exports.Settings.keyBindings === undefined) {
-             exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
-             saveSettings();
-         }
+         updateKeyBindingsSetting();
          if (exports.Settings.keyBindings.openDevTools === undefined) {
              exports.Settings.keyBindings.openDevTools = exports.DefaultSettings.keyBindings.openDevTools;
              saveSettings();
@@ -617,32 +616,32 @@
          exports.Settings.keyBindings.openDevTools = value;
      };
 
-     var getInterfaceLangauge = function () {
-         if (exports.Settings.interfaceLanguage === undefined) {
-             exports.Settings.interfaceLanguage = exports.DefaultSettings.interfaceLanguage;
-             saveSettings();
-         }
-         return exports.Settings.interfaceLanguage;
-     };
+    var getInterfaceLangauge = function () {
+        if (exports.Settings.interfaceLanguage === undefined) {
+            exports.Settings.interfaceLanguage = exports.DefaultSettings.interfaceLanguage;
+            saveSettings();
+        }
+        return exports.Settings.interfaceLanguage;
+    };
 
-     var setInterfaceLangauge = function (value) {
-         exports.Settings.interfaceLanguage = value;
-     };
+    var setInterfaceLangauge = function (value) {
+        exports.Settings.interfaceLanguage = value;
+    };
 
-     var getShowWarningRecursiveScan = function () {
-         if (exports.Settings.showWarningRecursiveScan === undefined) {
-             exports.Settings.showWarningRecursiveScan = exports.DefaultSettings.showWarningRecursiveScan;
-             saveSettings();
-         }
-         return exports.Settings.showWarningRecursiveScan;
-     };
+    var getShowWarningRecursiveScan = function () {
+        if (exports.Settings.showWarningRecursiveScan === undefined) {
+            exports.Settings.showWarningRecursiveScan = exports.DefaultSettings.showWarningRecursiveScan;
+            saveSettings();
+        }
+        return exports.Settings.showWarningRecursiveScan;
+    };
 
-     var setShowWarningRecursiveScan = function (value) {
-         exports.Settings.showWarningRecursiveScan = value;
-         saveSettings();
-     };
+    var setShowWarningRecursiveScan = function (value) {
+        exports.Settings.showWarningRecursiveScan = value;
+        saveSettings();
+    };
 
-     var getShowMainMenu = function() {
+    var getShowMainMenu = function() {
         if(exports.Settings.showMainMenu === undefined) {
             exports.Settings.showMainMenu = exports.DefaultSettings.showMainMenu;
         }
@@ -653,16 +652,27 @@
         exports.Settings.showMainMenu = value;
     };
 
-     var getShowUnixHiddenEntries = function() {
-         if(exports.Settings.showUnixHiddenEntries === undefined) {
-             exports.Settings.showUnixHiddenEntries = exports.DefaultSettings.showUnixHiddenEntries;
-         }
-         return exports.Settings.showUnixHiddenEntries;
-     };
+    var getWebDavPath = function() {
+        if(exports.Settings.webDavPath === undefined) {
+            exports.Settings.webDavPath = exports.DefaultSettings.webDavPath;
+        }
+        return exports.Settings.webDavPath;
+    };
 
-     var setShowUnixHiddenEntries = function(value) {
+    var setWebDavPath = function(value) {
+        exports.Settings.webDavPath = value;
+    };
+
+    var getShowUnixHiddenEntries = function() {
+        if(exports.Settings.showUnixHiddenEntries === undefined) {
+            exports.Settings.showUnixHiddenEntries = exports.DefaultSettings.showUnixHiddenEntries;
+        }
+        return exports.Settings.showUnixHiddenEntries;
+    };
+
+    var setShowUnixHiddenEntries = function(value) {
          exports.Settings.showUnixHiddenEntries = value;
-     };
+    };
 
     var getCheckForUpdates = function() {
         if(exports.Settings.checkForUpdates === undefined) {
@@ -706,7 +716,18 @@
 
     var setCalculateTags = function(value) {
         exports.Settings.calculateTags = value;
-    };    
+    };
+
+    var getLoadLocationMeta = function() {
+        if(exports.Settings.loadLocationMeta === undefined) {
+            exports.Settings.loadLocationMeta = exports.DefaultSettings.loadLocationMeta;
+        }
+        return exports.Settings.loadLocationMeta;
+    };
+
+    var setLoadLocationMeta = function(value) {
+        exports.Settings.loadLocationMeta = value;
+    };
 
     var getSupportedFileTypes = function() {
         if(exports.Settings.supportedFileTypes === undefined) {
@@ -798,6 +819,12 @@
                 return exports.Settings.tagGroups[i];
             }
         }  
+    };
+
+    var getAllTagGroupData = function() {
+        if(exports.Settings.tagGroups.length > 0) {
+            return exports.Settings.tagGroups;
+        }
     };
 
     var deleteTagGroup = function(tagData) {
@@ -901,6 +928,16 @@
         exports.Settings.tagGroups.push(newTagGroupModel);
         saveSettings();       
     };
+
+     var sortTagGroup = function(tagData) {
+         for(var i=0; i < exports.Settings.tagGroups.length; i++) {
+             if(exports.Settings.tagGroups[i].key === tagData.key) {
+                 exports.Settings.tagGroups[i].children.sort(function(a,b) { return a.title.localeCompare(b.title); });
+                 break;
+             }
+         }
+         saveSettings();
+     };
 
     var createTagGroup = function(tagData, tagGroupName) {
         var newTagGroupModel =  JSON.parse( JSON.stringify( tagGroupTemplate ) );
@@ -1076,6 +1113,13 @@
     var getRandomInt = function(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     };
+
+    function updateKeyBindingsSetting() {
+        if (exports.Settings.keyBindings === undefined) {
+            exports.Settings.keyBindings = exports.DefaultSettings.keyBindings;
+            saveSettings();
+        }
+    }
     
     // Public API definition
     exports.upgradeSettings                         = upgradeSettings;
@@ -1096,8 +1140,12 @@
     exports.setTagDelimiter                         = setTagDelimiter;
     exports.getShowMainMenu                         = getShowMainMenu;
     exports.setShowMainMenu                         = setShowMainMenu;
+    exports.getWebDavPath                           = getWebDavPath;
+    exports.setWebDavPath                           = setWebDavPath;
     exports.getCalculateTags                        = getCalculateTags;
     exports.setCalculateTags                        = setCalculateTags;
+    exports.getLoadLocationMeta                     = getLoadLocationMeta;
+    exports.setLoadLocationMeta                     = setLoadLocationMeta;
     exports.getIsWindowMaximized                    = getIsWindowMaximized;
     exports.setIsWindowMaximized                    = setIsWindowMaximized;
     exports.getLastOpenedLocation                   = getLastOpenedLocation;
@@ -1109,6 +1157,10 @@
     exports.setInterfaceLangauge                    = setInterfaceLangauge;
     exports.getCloseViewerKeyBinding                = getCloseViewerKeyBinding;
     exports.setCloseViewerKeyBinding                = setCloseViewerKeyBinding;
+    exports.getAddRemoveTagsKeyBinding              = getAddRemoveTagsKeyBinding;
+    exports.setAddRemoveTagsKeyBinding              = setAddRemoveTagsKeyBinding;
+    exports.getEditDocumentKeyBinding               = getEditDocumentKeyBinding;
+    exports.setEditDocumentKeyBinding               = setEditDocumentKeyBinding;
     exports.getOpenDevToolsScreenKeyBinding         = getOpenDevToolsScreenKeyBinding;
     exports.setOpenDevToolsScreenKeyBinding         = setOpenDevToolsScreenKeyBinding;
     exports.getToggleFullScreenKeyBinding           = getToggleFullScreenKeyBinding;
@@ -1146,7 +1198,8 @@
     exports.getAllTags                              = getAllTags;               
 
     exports.getTagData                              = getTagData;   
-    exports.getTagGroupData                         = getTagGroupData;  
+    exports.getTagGroupData                         = getTagGroupData;
+    exports.getAllTagGroupData                      = getAllTagGroupData;
 
     exports.deleteTag                               = deleteTag;    
     exports.deleteTagGroup                          = deleteTagGroup;   
@@ -1154,7 +1207,8 @@
     exports.createTag                               = createTag;
     exports.findTag                                 = findTag;
     exports.moveTag                                 = moveTag;  
-    exports.editTagGroup                            = editTagGroup; 
+    exports.editTagGroup                            = editTagGroup;
+    exports.sortTagGroup                            = sortTagGroup;
     exports.moveTagGroup                            = moveTagGroup;
     exports.createTagGroup                          = createTagGroup;    
     exports.duplicateTagGroup                       = duplicateTagGroup;    

@@ -8,7 +8,40 @@
 
     console.log("Loading tags.ui.js...");
 
+    var locationTagGroupKey    = "LTG",
+        calculatedTagGroupKey  = "CTG";
+
     var TSCORE = require("tscore");
+
+    var tagGroupsTmpl = Handlebars.compile(
+        '{{#each tagGroups}}'+
+        '<div class="accordion-group disableTextSelection tagGroupContainer">'+
+            '<div class="accordion-heading  btn-group ui-droppable tagGroupContainerHeading" key="{{key}}">'+
+                '<button class="btn btn-link btn-lg tagGroupIcon" data-toggle="collapse" data-target="#tagButtons{{@index}}" data-i18n="[title]ns.common:toggleTagGroup" title="{{../toggleTagGroup}}">'+
+                    '<i class="fa fa-tags fa-fw"></i>'+
+                '</button>'+
+                '<button class="btn btn-link tagGroupTitle" key="{{key}}">{{title}}</button>'+
+                '<button class="btn btn-link btn-lg tagGroupActions" key="{{key}}" data-i18n="[title]ns.common:tagGroupOperations" title="{{../tagGroupOperations}}">'+
+                    '<b class="fa fa-ellipsis-v"></b>'+
+                '</button>'+
+            '</div>'+
+            '<div class="accordion-body collapse in" id="tagButtons{{@index}}">'+
+                '<div class="accordion-inner" id="tagButtonsContent{{@index}}" style="padding: 2px;">'+
+                    '<div>'+
+                        '{{#each children}}'+
+                        '<a class="btn btn-sm tagButton" tag="{{title}}" parentkey="{{../key}}" style="{{style}}" title="{{titleUI}}" >' +
+                            '<span class="{{icon}}" /> '+
+                            '{{title}}'+
+                            '{{#if count}} [{{count}}]{{/if}}'+
+                            ' <span class="caret"></span>'+
+                        '</a>'+
+                        '{{/each}}'+
+                    '</div>'+
+                '</div>'+
+            '</div>'+
+        '</div>'+
+        '{{/each}}'
+    );
 
     function initUI() {
 
@@ -73,7 +106,12 @@
 
         $( "#tagGroupMenuCreateTagGroup" ).click( function() {
             TSCORE.showDialogTagGroupCreate();
-        });                
+        });
+
+        $( "#tagGroupSort" ).click( function() {
+            TSCORE.Config.sortTagGroup(TSCORE.selectedTagData);
+            generateTagGroups();
+        });
 
         $( "#tagGroupMenuMoveUp" ).click( function() {
             TSCORE.Config.moveTagGroup(TSCORE.selectedTagData, "up");
@@ -85,20 +123,20 @@
             generateTagGroups(); 
         });                
 
-        $( "#tagGroupMenuEditTagGroup" ).click( function() {
+        $( "#tagGroupMenuEdit" ).click( function() {
             TSCORE.showDialogEditTagGroup();
         });                
 
-        $( "#tagGroupMenuDeleteTagGroup" ).click( function() {
+        $( "#tagGroupMenuDelete" ).click( function() {
             TSCORE.showConfirmDialog(
                 $.i18n.t("ns.dialogs:deleteTagGroupTitleConfirm"),
                 $.i18n.t("ns.dialogs:deleteTagGroupContentConfirm", {tagGroup: TSCORE.selectedTagData.title}),
                 function() {
                     TSCORE.Config.deleteTagGroup(TSCORE.selectedTagData);
-                    generateTagGroups();                              
+                    generateTagGroups();
                 }
             );
-        });                
+        });
 
         // Dialogs
         $( "#editTagInTreeButton" ).click( function() {
@@ -155,130 +193,79 @@
     function generateTagGroups() {
         console.log("Generating TagGroups...");
         var $tagGroupsContent = $("#tagGroupsContent");
-        $tagGroupsContent.empty().addClass("accordion");
+        $tagGroupsContent.children().remove();
+        $tagGroupsContent.addClass("accordion");
 
         // Show TagGroup create button if no taggroup exist
         if(TSCORE.Config.Settings.tagGroups.length < 1) {
             $tagGroupsContent.append($("<button>", {
-                "class": "btn",
-                "data-i18n": "[title]ns.common:createTagGroup"
+                "class":        "btn",
+                "text":         $.i18n.t("ns.common:createTagGroup"),
+                "data-i18n":    "ns.common:createTagGroup"
             })
             .click( function() {
                 TSCORE.showDialogTagGroupCreate();
             })            
             );
-            return true;
+            return true; // quit the taggroup generation
         }
 
-        if(TSCORE.Config.getCalculateTags()) {
-            // Adding tags to the calculated tag group
-            //console.log("Calculated tags: "+JSON.stringify(exports.calculatedTags));
-            var tagGroupExist;
-            for(var k=0; k < TSCORE.Config.Settings.tagGroups.length; k++) {
-                tagGroupExist = false;
-                if(TSCORE.Config.Settings.tagGroups[k].key === "CTG") {
-                    TSCORE.Config.Settings.tagGroups[k].children = exports.calculatedTags;
-                    tagGroupExist = true;
-                    break;
-                }        
+        var tagGroups = TSCORE.Config.Settings.tagGroups;
+        var tag;
+
+        // Cleaning Special TagGroups
+        for(var k=0; k < tagGroups.length; k++) {
+            if(tagGroups[k].key.indexOf(locationTagGroupKey) === 0 || tagGroups[k].key === calculatedTagGroupKey) {
+                console.log("Deleting:"+tagGroups[k].key+" "+k);
+                tagGroups.splice(k, 1);
+                k--;
             }
-            // Adding the calculated tag group if it not exists
-            if(!tagGroupExist) {
-                TSCORE.Config.Settings.tagGroups.push({
-                        "title": "Tags in Perspective", // TODO translate
-                        "key": "CTG", 
-                        "expanded": true,
-                        "children": exports.calculatedTags
-                    });
-            } 
         }
 
-        for(var i=0; i < TSCORE.Config.Settings.tagGroups.length; i++) {
-            $tagGroupsContent.append($("<div>", {
-                "class": "accordion-group disableTextSelection",
-                "style": "width: 99%; border: 0px #aaa solid;"
-            })
-            .append($("<div>", {
-                "class":        "accordion-heading  btn-group",
-                "style":        "width:100%; margin: 0px;",
-                "key":          TSCORE.Config.Settings.tagGroups[i].key
-            })
+        // Adding tags to the calculated tag group
+        if(TSCORE.Config.getCalculateTags() && TSCORE.calculatedTags !== null) {
+            tagGroups.push({
+                "title": $.i18n.t("ns.common:tagsFromCurrentFolder"),
+                "key": calculatedTagGroupKey,
+                "expanded": true,
+                "children": TSCORE.calculatedTags
+            });
+        }
 
-            .append($("<button>", { // Taggroup toggle button
-                        "class":        "btn btn-link btn-lg tagGroupIcon",
-                        "data-toggle":  "collapse",
-                        "data-target":  "#tagButtons"+i,
-                        "data-i18n": "[title]ns.common:toggleTagGroup"
-                    }  
-                )
-                .html("<i class='fa fa-tags' style='margin-left: 5px;'></i>")
-            )// End taggroup toggle button  
+        // Adding tag groups from the current location
+        if(TSCORE.Config.getLoadLocationMeta() && TSCORE.locationTags !== null) {
+            TSCORE.locationTags.forEach(function(data) {
+                tagGroups.push({
+                    "title": data.title+" (imported)",
+                    "key": locationTagGroupKey+TSCORE.TagUtils.formatDateTime4Tag(new Date(),true, true),
+                    "expanded": true,
+                    "children": data.children
+                });
+            });
 
-            .append($("<button>", {
-                "class":        "btn btn-link tagGroupTitle",
-                "text":         TSCORE.Config.Settings.tagGroups[i].title,
-                "key":          TSCORE.Config.Settings.tagGroups[i].key
-            })
-            )
-            .droppable({
-                accept: '.tagButton',
-                hoverClass: "dirButtonActive",
-                drop: function( event, ui ) {
-                    //ui.draggable.detach();
-                    var tagGroupData = TSCORE.Config.getTagData(ui.draggable.attr("tag"), ui.draggable.attr("parentKey"));
-                    tagGroupData.parentKey = ui.draggable.attr("parentKey");
-                    var targetTagGroupKey = $(this).attr("key");
-                    console.log("Moving tag: "+tagGroupData.title+" to "+targetTagGroupKey);
-                    TSCORE.Config.moveTag(tagGroupData, targetTagGroupKey);
-                    generateTagGroups();
-                    $(ui.helper).remove();
-                }                   
-            })  
+        }
 
-            .append($("<button>", {
-                    "class": "btn btn-link btn-lg tagGroupActions",
-                    "tag": TSCORE.Config.Settings.tagGroups[i].title,
-                    "key": TSCORE.Config.Settings.tagGroups[i].key,
-                    "data-i18n": "[title]ns.common:tagGroupOperations"
-            })
-            .append("<b class='fa fa-ellipsis-v'></b>")
-            ) // end gear
+        // ehnances the taggroups with addition styling information
+        for(var i=0; i < tagGroups.length; i++) {
+            for(var j=0; j < tagGroups[i].children.length; j++) {
+                tag = tagGroups[i].children[j];
 
-            ) // end heading
-
-            .append($("<div>", {
-                "class":   "accordion-body collapse in",
-                "id":      "tagButtons"+i,
-                "style":   "margin: 0px 0px 0px 3px; border: 0px;"
-            })
-            .append($("<div>", {
-                "class":   "accordion-inner",
-                "id":      "tagButtonsContent"+i,
-                "style":   "padding: 2px; border: 0px;"
-            })
-            ) // end accordion-inner
-            ) // end accordion button
-
-            ); // end group
-
-            var tagButtons = $("<div>").appendTo( "#tagButtonsContent"+i );
-            var tag;
-            var tagTitle;
-            for(var j=0; j < TSCORE.Config.Settings.tagGroups[i].children.length; j++) {
-                tag = TSCORE.Config.Settings.tagGroups[i].children[j];
                 if(tag.description !== undefined) {
-                    tagTitle = tag.description;
+                    tag.titleUI = tag.description;
                 } else {
-                    tagTitle = "Opens context menu for "+tag.title;
+                    tag.titleUI = tag.title;
                 }
-                var tagIcon = "";
+
+                tag.icon = "";
                 if(tag.type === "smart"){
-                    tagIcon = "<span class='fa fa-flask'/> ";
+                    tag.icon = "fa fa-flask";
                 }
+
                 // Add keybinding to tags
                 if(tag.keyBinding !== undefined && tag.keyBinding.length > 0) {
-                    tagIcon = "<span class='fa fa-keyboard-o'/> ";
-                    tagTitle = tagTitle + " [" +tag.keyBinding+ "]";
+                    tag.icon = "fa fa-keyboard-o";
+                    tag.titleUI = tag.titleUI + " [" +tag.keyBinding+ "]";
+                    Mousetrap.unbind(tag.keyBinding);
                     Mousetrap.bind(
                         tag.keyBinding,
                         (function(innerTag) {
@@ -288,42 +275,54 @@
                         })(tag.title)
                     );
                 }
-                var tagCount = "";
-                if(tag.count !== undefined) {
-                    tagCount = " ("+tag.count+")";
-                }                
-                tagButtons.append($("<a>", {
-                    "class":         "btn btn-sm tagButton",
-                    "tag":           tag.title,
-                    "parentKey":     TSCORE.Config.Settings.tagGroups[i].key,
-                    "title":         tagTitle,
-                    "text":          tag.title+tagCount+" ",
-                    "style":         generateTagStyle(tag)
-                })
-                .draggable({
+                tag.style = generateTagStyle(tag);
+            }
+        }
+
+        $tagGroupsContent.html(tagGroupsTmpl({
+             "tagGroups":           tagGroups,
+             "toggleTagGroup":      $.i18n.t("ns.common:toggleTagGroup"),
+             "tagGroupOperations":  $.i18n.t("ns.common:tagGroupOperations")
+         }));
+
+        $tagGroupsContent.find(".tagButton").each(function() {
+            $(this).draggable({
                     "appendTo":   "body",
                     "helper":     "clone",
                     "revert":     'invalid',
                     "start":     function() {
+                        console.log("Start dragging..........");
                         TSCORE.selectedTagData = TSCORE.Config.getTagData($(this).attr("tag"), $(this).attr("parentKey"));
                         TSCORE.selectedTag = generateTagValue(TSCORE.selectedTagData);
-                        TSCORE.selectedTagData.parentKey = $(this).attr("parentKey");                         
-                    }                     
-                }) 
-                .prepend(tagIcon)
-                .append("<span class='caret'/>")
-                );
-           }
-        }
+                        TSCORE.selectedTagData.parentKey = $(this).attr("parentKey");
+                    }
+                })
+        });
+
+        $tagGroupsContent.find(".tagGroupTitle").each(function() {
+            $(this)
+                .droppable({
+                    accept: '.tagButton',
+                    hoverClass: "dirButtonActive",
+                    drop: function( event, ui ) {
+                        //ui.draggable.detach();
+                        var tagGroupData = TSCORE.Config.getTagData(ui.draggable.attr("tag"), ui.draggable.attr("parentKey"));
+                        tagGroupData.parentKey = ui.draggable.attr("parentKey");
+                        var targetTagGroupKey = $(this).attr("key");
+                        console.log("Moving tag: "+tagGroupData.title+" to "+targetTagGroupKey);
+                        TSCORE.Config.moveTag(tagGroupData, targetTagGroupKey);
+                        generateTagGroups();
+                        $(ui.helper).remove();
+                    }
+                })
+        });
 
         $tagGroupsContent.on("contextmenu click", ".tagGroupActions", function () {
             TSCORE.hideAllDropDownMenus();
             TSCORE.selectedTag = $(this).attr("tag");
             TSCORE.selectedTagData = TSCORE.Config.getTagGroupData($(this).attr("key"));
-            TSCORE.selectedTagData.parentKey = undefined;  
-
+            TSCORE.selectedTagData.parentKey = undefined;
             TSCORE.showContextMenu("#tagGroupMenu", $(this));
-
             return false;
         });
 
@@ -332,12 +331,9 @@
             TSCORE.selectedTagData = TSCORE.Config.getTagData($(this).attr("tag"), $(this).attr("parentKey"));
             TSCORE.selectedTag = generateTagValue(TSCORE.selectedTagData);
             TSCORE.selectedTagData.parentKey = $(this).attr("parentKey");
-
             TSCORE.showContextMenu("#tagTreeMenu", $(this));
-
             return false;
-        });               
-
+        });
     }
 
     function generateTagValue(tagData) {
@@ -444,18 +440,56 @@
     }
 
     function showDialogTagCreate() {
-        $( "#newTagTitle" ).val("");         
-        $( '#dialogTagCreate' ).modal({backdrop: 'static',show: true});        
+        $( "#newTagTitle" ).val("");
+
+        $("#formAddTags").validator();
+        $('#formAddTags').on('invalid.bs.validator', function() {
+            $( "#createTagButton").prop( "disabled", true );
+        });
+        $('#formAddTags').on('valid.bs.validator', function() {
+            $( "#createTagButton").prop( "disabled", false );
+        });
+
+        $('#dialogTagCreate').on('shown.bs.modal', function () {
+          $('#newTagTitle').focus();
+        });
+        $('#dialogTagCreate').modal({backdrop: 'static',show: true});
     }   
 
     function showDialogEditTagGroup() {
-        $( "#tagGroupName" ).val(TSCORE.selectedTagData.title);              
-        $( '#dialogEditTagGroup' ).modal({backdrop: 'static',show: true});        
+        $( "#tagGroupName" ).val(TSCORE.selectedTagData.title);
+
+        $("#formTagGroupEdit").validator();
+        $('#formTagGroupEdit').on('invalid.bs.validator', function() {
+            $( "#editTagGroupButton").prop( "disabled", true );
+        });
+        $('#formTagGroupEdit').on('valid.bs.validator', function() {
+            $( "#editTagGroupButton").prop( "disabled", false );
+        });
+
+        $('#dialogEditTagGroup').on('shown.bs.modal', function () {
+          $('#tagGroupName').focus();
+        });
+
+        $( '#dialogEditTagGroup' ).modal({backdrop: 'static',show: true});
     }
     
     function showDialogTagGroupCreate() {
-        $( "#newTagGroupName" ).val("");         
-        $( '#dialogTagGroupCreate' ).modal({backdrop: 'static',show: true});        
+        $( "#newTagGroupName" ).val("");
+
+        $("#formTagGroupCreate").validator();
+        $('#formTagGroupCreate').on('invalid.bs.validator', function() {
+            $( "#createTagGroupButton").prop( "disabled", true );
+        });
+        $('#formTagGroupCreate').on('valid.bs.validator', function() {
+            $( "#createTagGroupButton").prop( "disabled", false );
+        });
+
+        $('#dialogTagGroupCreate').on('shown.bs.modal', function () {
+          $('#newTagGroupName').focus();
+        });
+
+        $( '#dialogTagGroupCreate' ).modal({backdrop: 'static',show: true});
     }
 
     function showTagEditInTreeDialog() {
@@ -463,42 +497,67 @@
 
         $( "#tagInTreeKeyBinding" ).val(TSCORE.selectedTagData.keyBinding);
 
-        var $tagColor= $( "#tagColor" );
-        $tagColor.simplecolorpicker({picker: false, theme: 'fontawesome'});
-        
-        if(TSCORE.selectedTagData.color === undefined || TSCORE.selectedTagData.color.length < 1) {
-            $tagColor.simplecolorpicker('selectColor', '#008000');
+        var $tagColorChooser = $( "#tagColorChooser" );
+        var  $tagColor =  $('#tagColor');
+        $tagColorChooser.simplecolorpicker({picker: false});
+        $tagColorChooser.on("change", function() {
+            $tagColor.val($tagColorChooser.val());
+        });
+        if(TSCORE.selectedTagData.color === undefined
+            || TSCORE.selectedTagData.color.length < 1) {
+            $tagColor.val('#008000');
         } else {
-            $tagColor.simplecolorpicker('selectColor', TSCORE.selectedTagData.color);
+            $tagColor.val(TSCORE.selectedTagData.color);
         }
 
-        var $tagTextColor = $( "#tagTextColor" );
-        $tagTextColor.simplecolorpicker({picker: false, theme: 'fontawesome'});
-        
-        if(TSCORE.selectedTagData.textcolor === undefined || TSCORE.selectedTagData.textcolor.length < 1) {
-            $tagTextColor.simplecolorpicker('selectColor', '#ffffff');
+        var $tagTextColorChooser = $( "#tagTextColorChooser" );
+        var  $tagTextColor =  $('#tagTextColor');
+        $tagTextColorChooser.simplecolorpicker({picker: false});
+        $tagTextColorChooser.on("change", function() {
+            $tagTextColor.val($tagTextColorChooser.val());
+        });
+        if(TSCORE.selectedTagData.textcolor === undefined
+            || TSCORE.selectedTagData.textcolor.length < 1) {
+            $tagTextColor.val('#ffffff');
         } else {
-            $tagTextColor.simplecolorpicker('selectColor', TSCORE.selectedTagData.textcolor);
+            $tagTextColor.val(TSCORE.selectedTagData.textcolor);
         }
+
+        $("#formEditInTreeTag").validator();
+        $('#formEditInTreeTag').on('invalid.bs.validator', function() {
+            $( "#editTagInTreeButton").prop( "disabled", true );
+        });
+        $('#formEditInTreeTag').on('valid.bs.validator', function() {
+            $( "#editTagInTreeButton").prop( "disabled", false );
+        });
+
+        $('#dialogEditInTreeTag').on('shown.bs.modal', function () {
+          $('#tagInTreeName').focus();
+        });
+
         $( '#dialogEditInTreeTag' ).modal({backdrop: 'static',show: true});        
     }	
 
     function showAddTagsDialog() {
         console.log("Adding tags...");
-        function split( val ) {
-            return val.split( /,\s*/ );
-        }
-        function extractLast( term ) {
-            return split( term ).pop();
-        }
+        //function split( val ) {
+        //    return val.split( /,\s*/ );
+        //}
+        //function extractLast( term ) {
+        //    return split( term ).pop();
+        //}*/
         
         $('#tags').select2('data', null);
         $("#tags").select2({
             multiple: true,
             tags: TSCORE.Config.getAllTags(),
-            tokenSeparators: [","],
+            tokenSeparators: [","," "],
             minimumInputLength: 2,
             selectOnBlur: true
+        });
+
+        $('#dialogAddTags').on('shown.bs.modal', function () {
+          $('.select2-input').focus();
         });
 
         $( '#dialogAddTags' ).modal({backdrop: 'static',show: true});
@@ -506,6 +565,7 @@
 
     // Public Vars
     exports.calculatedTags                   = [];
+    exports.locationTags                     = [];
 
     // Public API definition
     exports.initUI                           = initUI;

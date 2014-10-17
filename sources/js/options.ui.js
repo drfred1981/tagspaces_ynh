@@ -9,6 +9,8 @@
     
     var TSCORE = require("tscore");
 
+    require(['libs/filesaver.js/FileSaver.js'], function() {});
+
     function generateSelectOptions(parent, data, selectedId) {
         parent.empty();
         parent.append($("<option>").text("").val("false"));
@@ -85,6 +87,21 @@
                 }                
             );
         });
+
+        if(isCordova) {
+            $( "#exportTagGroupsButton").hide();
+        }
+
+        $( "#exportTagGroupsButton" ).click(function() {
+            var jsonFormat = '{ "appName": "'+TSCORE.Config.DefaultSettings['appName']+
+                             '", "appVersion": "'+TSCORE.Config.DefaultSettings['appVersion']+
+                             '", "appBuild": "'+TSCORE.Config.DefaultSettings['appBuild']+
+                             '", "settingsVersion": '+TSCORE.Config.DefaultSettings['settingsVersion']+
+                             ', "tagGroups": '
+            var blob = new Blob([jsonFormat+JSON.stringify(TSCORE.Config.getAllTagGroupData())+"}"], {type: "application/json"});
+            saveAs(blob, "tsm["+TSCORE.TagUtils.formatDateTime4Tag(new Date(),true)+"].json");
+            console.log("Group Data Saved...");
+        });
     }    
     
     function reInitUI() {
@@ -92,16 +109,18 @@
         $("#showHiddenFilesCheckbox").attr("checked",TSCORE.Config.getShowUnixHiddenEntries());
         $("#checkforUpdatesCheckbox").attr("checked",TSCORE.Config.getCheckForUpdates());
         $("#calculateTagsCheckbox").attr("checked",TSCORE.Config.getCalculateTags());
+        $("#loadLocationMetaData").attr("checked",TSCORE.Config.getLoadLocationMeta());
         $("#tagsDelimiterInput").val(TSCORE.Config.getTagDelimiter());
         $("#prefixTagContainerInput").val(TSCORE.Config.getPrefixTagContainer());
 
         $("#nextDocumentKeyBinding").val(TSCORE.Config.getNextDocumentKeyBinding());
         $("#prevDocumentKeyBinding").val(TSCORE.Config.getPrevDocumentKeyBinding());
         $("#closeDocumentKeyBinding").val(TSCORE.Config.getCloseViewerKeyBinding());
+        $("#addRemoveTagsKeyBinding").val(TSCORE.Config.getAddRemoveTagsKeyBinding());
+        $("#editDocumentKeyBinding").val(TSCORE.Config.getEditDocumentKeyBinding());
         $("#reloadDocumentKeyBinding").val(TSCORE.Config.getReloadDocumentKeyBinding());
         $("#saveDocumentKeyBinding").val(TSCORE.Config.getSaveDocumentKeyBinding());
         $("#documentPropertiesKeyBinding").val(TSCORE.Config.getPropertiesDocumentKeyBinding());
-        //$("#").val(TSCORE.Config.get());
 
         $('#perspectiveList').empty();
         TSCORE.Config.getPerspectives().forEach(function (value) {
@@ -157,10 +176,13 @@
         TSCORE.Config.setCalculateTags($('#calculateTagsCheckbox').is(":checked"));
         TSCORE.Config.setTagDelimiter($("#tagsDelimiterInput").val());
         TSCORE.Config.setPrefixTagContainer($("#prefixTagContainerInput").val());
+        TSCORE.Config.setLoadLocationMeta($("#loadLocationMetaData").is(":checked"));
 
         TSCORE.Config.setNextDocumentKeyBinding(parseKeyBinding($("#nextDocumentKeyBinding").val()));
         TSCORE.Config.setPrevDocumentKeyBinding(parseKeyBinding($("#prevDocumentKeyBinding").val()));
         TSCORE.Config.setCloseViewerKeyBinding(parseKeyBinding($("#closeDocumentKeyBinding").val()));
+        TSCORE.Config.setAddRemoveTagsKeyBinding(parseKeyBinding($("#addRemoveTagsKeyBinding").val()));
+        TSCORE.Config.setEditDocumentKeyBinding(parseKeyBinding($("#editDocumentKeyBinding").val()));
         TSCORE.Config.setReloadDocumentKeyBinding(parseKeyBinding($("#reloadDocumentKeyBinding").val()));
         TSCORE.Config.setSaveDocumentKeyBinding(parseKeyBinding($("#saveDocumentKeyBinding").val()));
         TSCORE.Config.setPropertiesDocumentKeyBinding(parseKeyBinding($("#documentPropertiesKeyBinding").val()));
